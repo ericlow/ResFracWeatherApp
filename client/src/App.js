@@ -16,8 +16,7 @@ function App() {
     <div className="App">
       <header className="App-header">
 
-        <button onClick={apiCall}>Make API Call</button>
-
+      <button onClick={apiCall}>Make Weather API Call</button>
       </header>
     </div>
   );

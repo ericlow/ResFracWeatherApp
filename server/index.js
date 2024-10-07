@@ -2,13 +2,38 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const axios = require('axios');
+const winston = require ('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
 
+// 
 app.use(cors());
 
-console.log(app)
+
+// Configure Log Rotation
+const logger = winston.createLogger({
+    level: 'info',  // Minimum level to log (info and above)
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message }) => {
+            return `${timestamp} [${level.toUpperCase()}]: ${message}`;
+        })
+    ),
+    transports: [
+        // Log to the console
+        new winston.transports.Console(),
+        
+        // Log to a file (logs/app.log)
+        new DailyRotateFile({
+            filename: 'logs/application-%DATE%.log',
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: '3d'  // Keep logs for 3 days
+        })
+    ]
+});
+
 
 app.listen(8080, () => {
-      console.log('server listening on port 8080')
+    logger.info('server listening on port 8080')
 })
 
 app.get('/', (req, res) => {
@@ -25,10 +50,10 @@ async function getWeatherWithRetry(location, retries = 3, delay = 1000) {
         
         const baseUrl = 'http://api.weatherstack.com/current?access_key=6f515ee0ef34e313d26e2b6a18fe6b41&query=${location}';
         const response = await axios.get(baseUrl);
-        console.log(response);
+        logger.info(response);
         // Check if the response has data
         if (response.data && response.data.current) {
-            console.log(`The weather in ${location} is:`, response.data.current);
+            logger.info(`The weather in ${location} is:`, response.data.current);
         } else {
             throw new Error('Invalid response from API');
         }
@@ -38,7 +63,7 @@ async function getWeatherWithRetry(location, retries = 3, delay = 1000) {
 
         // Retry logic with exponential backoff
         if (retries > 0) {
-            console.log(`Retrying... attempts left: ${retries}`);
+            logger.info(`Retrying... attempts left: ${retries}`);
             const newDelay = delay * 2; // Exponential backoff
             await new Promise(res => setTimeout(res, newDelay));
             return getWeatherWithRetry(retries - 1, newDelay);
@@ -47,4 +72,6 @@ async function getWeatherWithRetry(location, retries = 3, delay = 1000) {
         }
     }
 }
+
+logger.info('Server Started Successfully');
 
