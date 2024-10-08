@@ -14,37 +14,6 @@ const apiCall = () => {
   })
 }
 
-const LoginButton = () => {
-  const handleLoginSuccess = (credentialResponse) => {
-    const idToken = credentialResponse.credential; // Get the ID token
-    console.log('--- jwt decode')
-     const user = jwtDecode(idToken); // Decode the token to get user info
-
-     const { name, email } = user; // Extract name and email
-
-     console.log('Login Success:', user);
-     console.log('Name:', name);
-     console.log('Email:', email);
-
-    // You can save this information in your app's state or context as needed
-  };
-
-  const handleLoginFailure = (error) => {
-    console.error('Login Failed:', error);
-    // Handle errors here
-  };
-
-  return (
-    <GoogleLogin
-      onSuccess={handleLoginSuccess}
-      onFailure={handleLoginFailure}
-      logo="YOUR_LOGO_URL" // Optional: Add your logo URL
-    />
-  );
-};
- 
-
-
 function App() {
   return (
     <div className="App">
