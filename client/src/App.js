@@ -15,8 +15,8 @@ function App() {
       <header className="App-header">
         <div>
           <Routes>
-            <Route path="/" element={<TestComponent/>}/>
-            <Route path="/login" element={<LoginPage/>}/>
+            <Route path="/test" element={<TestComponent/>}/>
+            <Route path="/" element={<LoginPage/>}/>
             <Route path="/home" element={<HomePage/>}/>
             <Route path="/settings" element={<SettingsPage/>}/>
           </Routes>
