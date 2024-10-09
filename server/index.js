@@ -38,9 +38,13 @@ const logger = winston.createLogger({
 });
 
 
+
+
 app.listen(8080, () => {
     logger.info('server listening on port 8080')
 })
+
+
 
 app.get('/', (req, res) => {
     res.send('Hello from our server!')
