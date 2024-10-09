@@ -5,7 +5,7 @@ import GoogleLogoutButton from './GoogleLogoutButton';
 const HomePage = () => {
   return (
     <div>
-      <h1>Home Page</h1>
+      <h1>Home Page Header</h1>
       <p>Welcome to the Home page!</p>
       <Link to="/settings">Settings</Link>
       <GoogleLogoutButton/>
