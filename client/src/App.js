@@ -1,52 +1,31 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import TestComponent from './components/TestComponent';
+import HomePage from './components/HomePage';
+import LoginPage from './components/LoginPage';
+import SettingsPage from './components/SettingsPage';
 import logo from './logo.svg';
-
-import axios from 'axios';
 import './App.css';
-import { jwtDecode } from "jwt-decode";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-
-//data will be the string we send from our server
-const apiCall = () => {
-  axios.get('http://localhost:8080').then((data) => {
-    //this console.log will be in our frontend console
-    console.log(data)
-  })
-}
 
 function App() {
   return (
+    <Router>
     <div className="App">
       <header className="App-header">
 
-        <button onClick={apiCall}>Make Weather API Call</button>
-
-        <GoogleOAuthProvider clientIdgit="768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com">
-          <div>
-            <GoogleLogin
-              onSuccess={credentialResponse => {
-                console.log(credentialResponse);
-
-                const idToken = credentialResponse.credential; // Get the ID token
-                console.log('--- jwt decode')
-                 const user = jwtDecode(idToken); // Decode the token to get user info
-            
-                 const { name, email } = user; // Extract name and email
-            
-                 console.log('Login Success:', user);
-                 console.log('Name:', name);
-                 console.log('Email:', email);
-            
-              }}
-              onFailure={error => {
-                console.error(error);
-              }}
-            />
-          </div>
-        </GoogleOAuthProvider>
+        <div>
+          <Routes>
+            <Route path="/test" element={<TestComponent/>}/>
+            <Route path="/" element={<LoginPage/>}/>
+            <Route path="/home" element={<HomePage/>}/>
+            <Route path="/settings" element={<SettingsPage/>}/>
+          </Routes>
+        </div>
 
       </header>
     </div>
+    </Router>
   );
 }
 
