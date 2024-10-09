@@ -13,6 +13,7 @@ function App() {
     <Router>
     <div className="App">
       <header className="App-header">
+
         <div>
           <Routes>
             <Route path="/test" element={<TestComponent/>}/>
@@ -21,6 +22,7 @@ function App() {
             <Route path="/settings" element={<SettingsPage/>}/>
           </Routes>
         </div>
+
       </header>
     </div>
     </Router>
