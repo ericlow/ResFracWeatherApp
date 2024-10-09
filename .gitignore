@@ -131,3 +131,5 @@ dist
 
 # Logs
 logs/
+
+.DS_Store
