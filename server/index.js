@@ -4,8 +4,14 @@ const cors = require('cors');
 const axios = require('axios');
 const winston = require ('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-// 
+
+/** all cross origin resource sharing
+ * The React frontend running on http://localhost:3000
+ * The Node backend (API) running on http://localhost:5000 or another port
+ */
 app.use(cors());
 
 
@@ -73,5 +79,51 @@ async function getWeatherWithRetry(location, retries = 3, delay = 1000) {
     }
 }
 
-logger.info('Server Started Successfully');
 
+// Define the path to your SQLite database file
+const dbPath = path.resolve(__dirname, 'db', 'users.db');
+
+// Connect to the SQLite database
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    return logger.error('Error connecting to the database:', err.message);
+  }
+  logger.info('Connected to the SQLite database.');
+});
+
+// Run a simple SQL query to test the connection
+db.get('SELECT COUNT(*) from users', [], (err, row) => {
+  if (err) {
+    return logger.error('Error running query:', err.message);
+  }
+  logger.info(`Query result: ${row.result}`); // Should output: Query result: 2
+});
+
+function upsertUser(email, firstName, lastName) {
+    const sql = `
+      INSERT INTO users (email, first, last)
+      VALUES (?, ?, ?)
+    `;
+  
+    db.run(sql, [email, firstName, lastName], function(err) {
+      if (err) {
+        console.error('Error upserting user:', err.message);
+      } else {
+        console.log(`User upserted or updated with email: ${email}`);
+      }
+    });
+  }
+
+  upsertUser('eric2@google.com', 'eric2', 'low2');
+
+
+// Close the database connection after the query is done
+db.close((err) => {
+  if (err) {
+    return logger.error('Error closing the database connection:', err.message);
+  }
+  logger.info('Database connection closed.');
+});
+
+
+logger.info('Server Started Successfully');

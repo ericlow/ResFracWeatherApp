@@ -21,7 +21,7 @@ function App() {
 
         <button onClick={apiCall}>Make Weather API Call</button>
 
-        <GoogleOAuthProvider clientId="768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com">
+        <GoogleOAuthProvider clientIdgit="768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com">
           <div>
             <GoogleLogin
               onSuccess={credentialResponse => {

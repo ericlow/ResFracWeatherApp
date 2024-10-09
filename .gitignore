@@ -131,3 +131,6 @@ dist
 
 # Logs
 logs/
+
+# OSX
+.DS_Store
