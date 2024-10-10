@@ -190,7 +190,3 @@ process.on('SIGTERM', shutdown); // Sent by `kill`
 process.on('SIGINT', shutdown);  // Sent by Ctrl+C in the terminal
 
 logger.info('Server Started Successfully');
-
-insertUser('jane@gmail.com', 'Jane', "Doe");
-upsertUser('eric.low@gmail.com', 'changed', 'name');
-
