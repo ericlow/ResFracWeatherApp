@@ -22,6 +22,37 @@ app.use(cors());
 app.use(express.json());
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
+// GET /get-user - Fetch user details from the database
+app.get('/get-user', (req, res) => {
+  console.log('1');
+  console.log(req.query)
+  const email = req.query.email;
+  console.log('2');
+
+  const query = 'SELECT * FROM users WHERE email = ?';
+  console.log('3');
+  db.get(query, [email], (err, row) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+    console.log('4');
+
+    if (!row) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    console.log('5');
+
+    // Return the user data as a JSON response
+    res.json({
+      first: row.first,
+      last: row.last,
+      email: row.email,
+      apikey: row.apikey,
+    });
+    console.log('6');
+  });
+});
 
 
 app.post('/validate-user', async (req, res) => {
@@ -216,6 +247,27 @@ function upsertUser(email, firstName, lastName) {
   });
 }
 
+const getUser = (email) => {
+  let user = null; // Variable to hold the user data
+
+  // Synchronous function to execute the query
+  const sql = `SELECT * FROM users WHERE email = ?`;
+  
+  try {
+    // Using db.prepare to create a statement
+    const stmt = db.prepare(sql);
+    
+    // Using stmt.get to retrieve the row
+    user = stmt.get(email); // This is a synchronous call
+
+    // Finalize the statement to free resources
+    stmt.finalize();
+  } catch (error) {
+    console.error("Error retrieving user:", error);
+  }
+
+  return user; // Return the user object or null if not found
+};
 
 function updateKey(email, apikey) {
   console.log('updaetkey enter')
@@ -233,7 +285,6 @@ function updateKey(email, apikey) {
     }
   });
 }
-
 
 // Close the database connection when the service shuts down
 const shutdown = () => {
