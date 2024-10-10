@@ -134,3 +134,5 @@ logs/
 
 # OSX
 .DS_Store
+
+server/db/users.db

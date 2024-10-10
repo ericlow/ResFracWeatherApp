@@ -1,19 +1,59 @@
 const express = require('express');
-const app = express();
 const cors = require('cors');
 const axios = require('axios');
 const winston = require ('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const { OAuth2Client } = require('google-auth-library');
 
+const GOOGLE_CLIENT_ID = '768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com';
 
+const app = express();
 /** all cross origin resource sharing
  * The React frontend running on http://localhost:3000
  * The Node backend (API) running on http://localhost:5000 or another port
  */
 app.use(cors());
 
+app.use(express.json());
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+
+
+app.post('/validate-user', async (req, res) => {
+  logger.debug('validate-user: enter');
+  const token = req.headers.authorization?.split(' ')[1]; // Get token from Authorization header
+  if (!token) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    
+    const userData = {
+      firstName: payload.given_name,
+      lastName: payload.family_name,
+      email: payload.email,
+    };
+    logger.info(userData.firstName);
+    logger.info(userData.lastName);
+    logger.info(userData.email);
+    upsertUser(userData.email, userData.firstName, userData.lastName);
+
+    // Optionally store user information in your database here
+
+    res.status(200).json(userData); // Return user data to frontend
+    logger.debug('validate-user: exit 200');
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(401).send('Invalid token');
+  }
+});
 
 // Configure Log Rotation
 const logger = winston.createLogger({
@@ -37,28 +77,24 @@ const logger = winston.createLogger({
     ]
 });
 
-
-
-
 app.listen(8080, () => {
     logger.info('server listening on port 8080')
 })
-
-
 
 app.get('/', (req, res) => {
     res.send('Hello from our server!')
 
     // Call the function to get weather data
-    getWeatherWithRetry('Oakland');
+
+    getWeatherWithRetry('6f515ee0ef34e313d26e2b6a18fe6b41', 'Oakland');
 })
 
 // Function to fetch weather data with exponential backoff
-async function getWeatherWithRetry(location, retries = 3, delay = 1000) {
+async function getWeatherWithRetry(apikey, location, retries = 3, delay = 1000) {
     try {
         // Make the API request
         
-        const baseUrl = 'http://api.weatherstack.com/current?access_key=6f515ee0ef34e313d26e2b6a18fe6b41&query=${location}';
+        const baseUrl = 'http://api.weatherstack.com/current?access_key=${apikey}&query=${location}';
         const response = await axios.get(baseUrl);
         logger.info(response);
         // Check if the response has data
@@ -96,14 +132,14 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 // Run a simple SQL query to test the connection
-db.get('SELECT COUNT(*) from users', [], (err, row) => {
+db.get('SELECT 1', [], (err, row) => {
   if (err) {
     return logger.error('Error running query:', err.message);
   }
-  logger.info(`Query result: ${row.result}`); // Should output: Query result: 2
+  logger.info(`Database connection healthy`);
 });
 
-function upsertUser(email, firstName, lastName) {
+function insertUser(email, firstName, lastName) {
     const sql = `
       INSERT INTO users (email, first, last)
       VALUES (?, ?, ?)
@@ -111,23 +147,46 @@ function upsertUser(email, firstName, lastName) {
   
     db.run(sql, [email, firstName, lastName], function(err) {
       if (err) {
-        console.error('Error upserting user:', err.message);
+        logger.error('Error upserting user:', err.message);
       } else {
-        console.log(`User upserted or updated with email: ${email}`);
+        logger.info(`User upserted or updated with email: ${email}`);
       }
     });
   }
 
-  upsertUser('eric2@google.com', 'eric2', 'low2');
+
+function upsertUser(email, firstName, lastName) {
+  const sql = `
+  INSERT INTO users (email, first, last)
+  VALUES (?, ?, ?)
+  ON CONFLICT(email) DO UPDATE SET
+      first = excluded.first,
+      last = excluded.last;`;
+
+  db.run(sql, [email, firstName, lastName], function(err) {
+    if (err) {
+      logger.error('Error upserting user:', err.message);
+    } else {
+      logger.info(`User upserted or updated with email: ${email}`);
+    }
+  });
+}
 
 
-// Close the database connection after the query is done
-db.close((err) => {
-  if (err) {
-    return logger.error('Error closing the database connection:', err.message);
-  }
-  logger.info('Database connection closed.');
-});
+// Close the database connection when the service shuts down
+const shutdown = () => {
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing the database connection:', err.message);
+    } else {
+      console.log('Closed the database connection.');
+    }
+    process.exit(0); // Exit the process after closing the connection
+  });
+};
 
+// Gracefully handle shutdown signals
+process.on('SIGTERM', shutdown); // Sent by `kill`
+process.on('SIGINT', shutdown);  // Sent by Ctrl+C in the terminal
 
 logger.info('Server Started Successfully');
