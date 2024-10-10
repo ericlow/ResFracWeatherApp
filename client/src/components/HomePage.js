@@ -1,8 +1,11 @@
 import React from 'react';
 import GoogleLogoutButton from './GoogleLogoutButton';
 import NavigateButton from './NavigateButton';
+import { useAuth } from './AuthContext';
 
 const HomePage = () => {
+  const { authToken } = useAuth();
+
   return (
     <div>
       <h1>Home Page Header</h1>

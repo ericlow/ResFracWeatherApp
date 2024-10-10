@@ -2,37 +2,23 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useAuth } from './AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { setToken, authToken } = useAuth();
 
   const handleSuccess = async (credentialResponse) => {
     // creds to go server
     console.log(credentialResponse);
 
-    // this doesn't work
-    // const { access_token } = credentialResponse;
-    // console.log('Access Token:', access_token); // Log the token
+    const idToken = credentialResponse.credential;
+    setToken(idToken);  // save the token, so all calls to the service can be authenticated.
+    // Decode the token to get user info
+    const user = jwtDecode(idToken); 
+    const { name, email } = user;
 
-    const idToken = credentialResponse.credential; // Get the ID token
-    console.log('--- jwt decode')
-    const user = jwtDecode(idToken); // Decode the token to get user info
-
-    console.log('------------------------------');
-    console.log(user);
-    console.log('------------------------------');
-
-
-    const { name, email } = user; // Extract name and email
-    console.log('Login Success:', user);
-    console.log('Name:', name);
-    console.log('Email:', email);
-
-    // // store the token in the session
-    // const { access_token } = credentialResponse;
-
-    // // Send the access token to the backend for validation and user info extraction
-
+    // Send the access token to the backend for validation
     const response = await fetch('http://localhost:8080/validate-user', {
       method: 'POST',
       headers: {
@@ -42,6 +28,7 @@ const LoginPage = () => {
     });
 
     const userData = await response.json();
+
     console.log('User Data:', userData);
     navigate('/home');  
   }

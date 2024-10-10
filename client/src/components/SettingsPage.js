@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NavigateButton from './NavigateButton';
+import { useAuth } from './AuthContext';
 
 
 const SettingsPage = () => {
 const [apiKey, setApiKey] = useState('');
 const [isEdited, setIsEdited] = useState(false);
 const [isSaved, setIsSaved] = useState(true); // Initially, it's saved
-
+const { authToken } = useAuth();
 
 const handleInputChange = (event) => {
   setApiKey(event.target.value);
