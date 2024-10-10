@@ -131,11 +131,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 // Run a simple SQL query to test the connection
-db.get('SELECT COUNT(*) from users', [], (err, row) => {
+db.get('SELECT 1', [], (err, row) => {
   if (err) {
     return logger.error('Error running query:', err.message);
   }
-  logger.info(`Query result: ${row.result}`); // Should output: Query result: 2
+  logger.info(`Database connection healthy`);
 });
 
 function upsertUser(email, firstName, lastName) {
@@ -153,14 +153,22 @@ function upsertUser(email, firstName, lastName) {
     });
   }
 
+// Close the database connection when the service shuts down
+const shutdown = () => {
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing the database connection:', err.message);
+    } else {
+      console.log('Closed the database connection.');
+    }
+    process.exit(0); // Exit the process after closing the connection
+  });
+};
 
-// // Close the database connection after the query is done
-// db.close((err) => {
-//   if (err) {
-//     return logger.error('Error closing the database connection:', err.message);
-//   }
-//   logger.info('Database connection closed.');
-// });
-
+// Gracefully handle shutdown signals
+process.on('SIGTERM', shutdown); // Sent by `kill`
+process.on('SIGINT', shutdown);  // Sent by Ctrl+C in the terminal
 
 logger.info('Server Started Successfully');
+
+
