@@ -1,12 +1,12 @@
 // App.test.js
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-// import App from '../App';
+import Content from '../App';
 
 // test('renders Home page when navigating to /home', () => {
 //   render(
 //     <MemoryRouter initialEntries={['/home']}>
-//       <App />
+//       <Content />
 //     </MemoryRouter>
 //   );
 //   // Check if the Home component is rendered
