@@ -6,8 +6,11 @@ const DailyRotateFile = require('winston-daily-rotate-file');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { OAuth2Client } = require('google-auth-library');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
 const GOOGLE_CLIENT_ID = '768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = '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';
 
 const app = express();
 /** all cross origin resource sharing
@@ -120,6 +123,47 @@ async function getWeatherWithRetry(apikey, location, retries = 3, delay = 1000) 
 }
 
 
+// Middleware to parse JSON request bodies
+app.use(bodyParser.json());
+
+// Middleware to verify Google API token
+const verifyToken = (req, res, next) => {
+  console.log('1');
+  const token = req.headers['authorization']?.split(' ')[1]; // Extract the token from the header
+
+  console.log('2');
+  if (!token) {
+    console.log('3');
+    return res.status(403).send('Token is required');
+  }
+
+  console.log('4');
+  jwt.verify(token, GOOGLE_CLIENT_SECRET, (err, user) => {
+    if (err) {
+      console.log('5');
+      return res.status(403).send('Invalid token');
+    }
+    console.log('6');
+    req.user = user; // Attach user information to the request object
+    next(); // Proceed to the next middleware or route handler
+  });
+};
+
+// Apply the verifyToken middleware to the update-api-key route
+app.post('/update-api-key', async (req, res) => {
+  const { apiKey, email } = req.body;
+  console.log('update api key 1')
+  try {
+    console.log('update api key 2')
+    updateKey(email, apiKey);    
+    console.log('update api key  3')
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    res.status(500).json({ error: 'Failed to update API key' });
+  }
+});
+
+
 // Define the path to your SQLite database file
 const dbPath = path.resolve(__dirname, 'db', 'users.db');
 
@@ -168,6 +212,24 @@ function upsertUser(email, firstName, lastName) {
       logger.error('Error upserting user:', err.message);
     } else {
       logger.info(`User upserted or updated with email: ${email}`);
+    }
+  });
+}
+
+
+function updateKey(email, apikey) {
+  console.log('updaetkey enter')
+  console.log(apikey);
+
+  console.log('updaetkey val')
+  const sql = `UPDATE users SET apikey = ? WHERE email = ?`;
+
+  db.run(sql, [apikey, email], function(err) {
+    if (err) {
+      logger.error('Error upserting user:', err.message);
+    } else {
+      logger.info('changes: ' + this.changes);
+      logger.info(`User upserted or updated with emailxxxxxx: ${email}`);
     }
   });
 }
