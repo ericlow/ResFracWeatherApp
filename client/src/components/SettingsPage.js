@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NavigateButton from './NavigateButton';
+import { useAuth } from './AuthContext';
 
 
 const SettingsPage = () => {
 const [apiKey, setApiKey] = useState('');
 const [isEdited, setIsEdited] = useState(false);
 const [isSaved, setIsSaved] = useState(true); // Initially, it's saved
-
+const { authToken } = useAuth();
 
 const handleInputChange = (event) => {
   setApiKey(event.target.value);
@@ -29,7 +30,7 @@ const handleSubmit = (event) => {
       <h1>Settings Page</h1>
       <p>Settings</p>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="apiKey">API Key:</label>
+        <label htmlFor="apiKey">API Key:</label><br/>
         <input type="text" id="apiKey" value={apiKey} onChange={handleInputChange} placeholder="Enter your API key" />
         <button type="submit">Save API Key</button>
 

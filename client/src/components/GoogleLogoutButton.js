@@ -13,7 +13,7 @@ const GoogleLogoutButton = () => {
     navigate('/')
   }
   return (
-    <button onClick={handleLogout}>Logout</button>
+    <button onClick={handleLogout}>logout</button>
   );
 };
 

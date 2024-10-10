@@ -15,9 +15,9 @@ DB_FILE="./users.db"
 sqlite3 "$DB_FILE" <<EOF
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL,
+    email TEXT PRIMARY KEY,
+    first TEXT NOT NULL,
+    last TEXT NOT NULL,
     apikey TEXT
 );
 EOF
