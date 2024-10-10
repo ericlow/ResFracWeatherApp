@@ -10,7 +10,6 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 
 const GOOGLE_CLIENT_ID = '768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = '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';
 
 const app = express();
 /** all cross origin resource sharing
@@ -159,22 +158,16 @@ app.use(bodyParser.json());
 
 // Middleware to verify Google API token
 const verifyToken = (req, res, next) => {
-  console.log('1');
   const token = req.headers['authorization']?.split(' ')[1]; // Extract the token from the header
 
-  console.log('2');
   if (!token) {
-    console.log('3');
     return res.status(403).send('Token is required');
   }
 
-  console.log('4');
   jwt.verify(token, GOOGLE_CLIENT_SECRET, (err, user) => {
     if (err) {
-      console.log('5');
       return res.status(403).send('Invalid token');
     }
-    console.log('6');
     req.user = user; // Attach user information to the request object
     next(); // Proceed to the next middleware or route handler
   });
@@ -183,11 +176,8 @@ const verifyToken = (req, res, next) => {
 // Apply the verifyToken middleware to the update-api-key route
 app.post('/update-api-key', async (req, res) => {
   const { apiKey, email } = req.body;
-  console.log('update api key 1')
   try {
-    console.log('update api key 2')
     updateKey(email, apiKey);    
-    console.log('update api key  3')
   } catch (error) {
     console.error('Error updating API key:', error);
     res.status(500).json({ error: 'Failed to update API key' });
