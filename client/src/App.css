@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+.input-width {
+  width: 800px; /* Set the width of the input field to 800px */
+  margin-right: 20px;
+}
+
+.input-label-style {
+  margin-left:200px;
+  margin-right:200px;
+}

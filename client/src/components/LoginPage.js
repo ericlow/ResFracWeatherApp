@@ -36,7 +36,7 @@ const LoginPage = () => {
 
   return (
     <div>
-      <h1>LoginPage</h1>
+      <h1>ResFrac Weather</h1>
       <GoogleOAuthProvider clientId="768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com">
         <div>
           <GoogleLogin onSuccess={handleSuccess} onFailure={error => { console.error(error) }} />

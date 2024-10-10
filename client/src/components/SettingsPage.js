@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavigateButton from './NavigateButton';
 import { useAuth } from './AuthContext';
-
+import SettingsTitleBar from './SettingsTitleBar';
 
 const SettingsPage = () => {
   const [apiKey, setApiKey] = useState('');
@@ -70,16 +70,15 @@ const SettingsPage = () => {
 
   return (
     <div>
-      <h1>Settings Page</h1>
-      <p>Settings</p>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="apiKey">API Key:</label><br/>
-        <input type="text" id="apiKey" value={apiKey} onChange={handleInputChange} placeholder="Enter your API key" />
-        <button type="submit">Save API Key</button>
-      </form>
+      <SettingsTitleBar/>
 
-      <NavigateButton path="/home" label="close" />
-      
+      <form onSubmit={handleSubmit} className="p-3">
+        <div  className-="mb-3  d-flex align-items-left">
+          <label  className="input-label" htmlFor="apiKey">API Key:</label><br/>
+          <input  className="input-width me-2"  type="text" id="apiKey" value={apiKey} onChange={handleInputChange} placeholder="Enter your API key" />
+          <button className="btn btn-primary" type="submit" >Save API Key</button>
+        </div>
+      </form>
     </div>
   );
 };
