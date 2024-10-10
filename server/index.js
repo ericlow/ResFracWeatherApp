@@ -20,6 +20,7 @@ app.use(express.json());
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 
+
 app.post('/validate-user', async (req, res) => {
   logger.debug('validate-user: enter');
   const token = req.headers.authorization?.split(' ')[1]; // Get token from Authorization header
@@ -42,6 +43,7 @@ app.post('/validate-user', async (req, res) => {
     logger.info(userData.firstName);
     logger.info(userData.lastName);
     logger.info(userData.email);
+    upsertUser(userData.email, userData.firstName, userData.lastName);
 
     // Optionally store user information in your database here
 
@@ -52,9 +54,6 @@ app.post('/validate-user', async (req, res) => {
     res.status(401).send('Invalid token');
   }
 });
-
-
-
 
 // Configure Log Rotation
 const logger = winston.createLogger({
@@ -155,13 +154,13 @@ function upsertUser(email, firstName, lastName) {
   }
 
 
-// Close the database connection after the query is done
-db.close((err) => {
-  if (err) {
-    return logger.error('Error closing the database connection:', err.message);
-  }
-  logger.info('Database connection closed.');
-});
+// // Close the database connection after the query is done
+// db.close((err) => {
+//   if (err) {
+//     return logger.error('Error closing the database connection:', err.message);
+//   }
+//   logger.info('Database connection closed.');
+// });
 
 
 logger.info('Server Started Successfully');
