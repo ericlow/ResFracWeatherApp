@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import GoogleLogoutButton from './GoogleLogoutButton';
-import NavigateButton from './NavigateButton';
 import { useAuth } from './AuthContext';
+import HomeTitleBar from './HomeTitleBar'; 
 
 const HomePage = () => {
   const { authToken, email } = useAuth();
@@ -43,12 +42,17 @@ const HomePage = () => {
 
   return (
     <div>
-      <h1>Home Page Header</h1>
-      <p>Welcome to the Home page!</p>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="city">City</label><br/>
-        <input type="text" id="city" value={city} onChange={handleInputChange} placeholder="What city do you want weather for?" />
-        <button type="submit">Get Weather</button>
+      <HomeTitleBar/>
+      <div  className="input-label-style">
+        Enter City Name: In the text box labeled "City," 
+        type the name of the city you are interested in. 
+        For example, you can enter "New York," "Los Angeles," or "London."
+      </div>
+      <form onSubmit={handleSubmit} className="p-3">
+        <div className-="mb-3  d-flex align-items-center">
+          <input className="input-width me-2" type="text" id="city" value={city} onChange={handleInputChange} placeholder="What city do you want weather for?" />
+          <button type="submit"  className="btn btn-primary">Get Weather</button>
+        </div>
       </form>
 
       {error && <p>Error: {error}</p>} {/* Show error message if there is one */}
@@ -66,8 +70,6 @@ const HomePage = () => {
         </div>
       )}
 
-      <NavigateButton path="/settings" label="settings" />
-      <GoogleLogoutButton/>
     </div>
   );
 };
