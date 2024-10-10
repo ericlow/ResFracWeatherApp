@@ -1,18 +1,59 @@
 const express = require('express');
-const app = express();
 const cors = require('cors');
 const axios = require('axios');
 const winston = require ('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const { OAuth2Client } = require('google-auth-library');
 
+const GOOGLE_CLIENT_ID = '768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com';
 
+const app = express();
 /** all cross origin resource sharing
  * The React frontend running on http://localhost:3000
  * The Node backend (API) running on http://localhost:5000 or another port
  */
 app.use(cors());
+
+app.use(express.json());
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+
+app.post('/validate-user', async (req, res) => {
+  logger.debug('validate-user: enter');
+  const token = req.headers.authorization?.split(' ')[1]; // Get token from Authorization header
+  if (!token) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    
+    const userData = {
+      firstName: payload.given_name,
+      lastName: payload.family_name,
+      email: payload.email,
+    };
+    logger.info(userData.firstName);
+    logger.info(userData.lastName);
+    logger.info(userData.email);
+
+    // Optionally store user information in your database here
+
+    res.status(200).json(userData); // Return user data to frontend
+    logger.debug('validate-user: exit 200');
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(401).send('Invalid token');
+  }
+});
+
+
 
 
 // Configure Log Rotation
@@ -37,14 +78,9 @@ const logger = winston.createLogger({
     ]
 });
 
-
-
-
 app.listen(8080, () => {
     logger.info('server listening on port 8080')
 })
-
-
 
 app.get('/', (req, res) => {
     res.send('Hello from our server!')
@@ -117,8 +153,6 @@ function upsertUser(email, firstName, lastName) {
       }
     });
   }
-
-  upsertUser('eric2@google.com', 'eric2', 'low2');
 
 
 // Close the database connection after the query is done
