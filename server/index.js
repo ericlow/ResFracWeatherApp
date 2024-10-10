@@ -23,13 +23,13 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // GET /get-user - Fetch user details from the database
 app.get('/get-user', (req, res) => {
-  console.log('1');
-  console.log(req.query)
-  const email = req.query.email;
-  console.log('2');
+  logger.info(`get-user: ${req.query}`)
 
+  const email = req.query.email;
+
+  
   const query = 'SELECT * FROM users WHERE email = ?';
-  console.log('3');
+
   db.get(query, [email], (err, row) => {
     if (err) {
       console.error('Error fetching user:', err);
@@ -51,6 +51,30 @@ app.get('/get-user', (req, res) => {
     });
     console.log('6');
   });
+});
+
+// GET /get-user - Fetch user details from the database
+app.get('/get-weather', async (req, res) => {
+  logger.info(req.query)
+  const city = req.query.city;
+  const email = req.query.email;
+  logger.debug(`city: ${city}\t email: ${email}`);
+  
+  try {
+
+
+    logger.debug(`await get user2`);
+    const user = await getUser2(email);
+    logger.debug(`user: \n ${JSON.stringify(user)}`);
+
+    const weather = await getWeather(user.apikey, city);
+
+//    getWeatherWithRetry(user.apikey, city)
+    res.status(200).json(weather);
+    logger.debug(`get-weather returns OK`)
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 
@@ -90,7 +114,7 @@ app.post('/validate-user', async (req, res) => {
 
 // Configure Log Rotation
 const logger = winston.createLogger({
-    level: 'info',  // Minimum level to log (info and above)
+    level: 'debug',  // Minimum level to log (info and above)
     format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.printf(({ timestamp, level, message }) => {
@@ -122,33 +146,64 @@ app.get('/', (req, res) => {
     getWeatherWithRetry('6f515ee0ef34e313d26e2b6a18fe6b41', 'Oakland');
 })
 
+function helloWorld() {
+  getWeatherWithRetry('6f515ee0ef34e313d26e2b6a18fe6b41', 'Oakland');
+}
+
+
+// Function to get weather from Weatherstack API
+const getWeather = async (apikey, city) => {
+  try {
+    const weatherResponse = await axios.get(`http://api.weatherstack.com/current`, {
+      params: {
+        access_key: apikey,
+        query: city,
+        units: 'f'
+      }
+    });
+    
+    const weatherData = weatherResponse.data;
+
+    // Check for API error
+    if (weatherData.error) {
+      throw new Error(weatherData.error.info);
+    }
+
+    // Return the relevant weather data
+    return {
+      location: weatherData.location.name,
+      temperature: weatherData.current.temperature,
+      description: weatherData.current.weather_descriptions[0],
+      humidity: weatherData.current.humidity,
+      wind_speed: weatherData.current.wind_speed,
+      weather_icons: weatherData.current.weather_icons
+    };
+
+  } catch (error) {
+    console.error('Error fetching weather:', error.message);
+    throw error; // Re-throw the error to handle it in the route handler
+  }
+};
+
+
 // Function to fetch weather data with exponential backoff
-async function getWeatherWithRetry(apikey, location, retries = 3, delay = 1000) {
+async function getWeatherWithRetry(apikey, location) {
     try {
         // Make the API request
         
-        const baseUrl = 'http://api.weatherstack.com/current?access_key=${apikey}&query=${location}';
+        const baseUrl = `http://api.weatherstack.com/current?access_key=${apikey}&query=${location}`;
         const response = await axios.get(baseUrl);
-        logger.info(response);
+
         // Check if the response has data
         if (response.data && response.data.current) {
-            logger.info(`The weather in ${location} is:`, response.data.current);
+            logger.debug(JSON.stringify(response.data));
+            logger.info(`The weather in ${location} is: \n\n ${JSON.stringify(response.data.current)}`);
         } else {
             throw new Error('Invalid response from API');
         }
 
     } catch (error) {
         console.error(`Error fetching weather data: ${error.message}`);
-
-        // Retry logic with exponential backoff
-        if (retries > 0) {
-            logger.info(`Retrying... attempts left: ${retries}`);
-            const newDelay = delay * 2; // Exponential backoff
-            await new Promise(res => setTimeout(res, newDelay));
-            return getWeatherWithRetry(retries - 1, newDelay);
-        } else {
-            console.error('Failed after maximum retries');
-        }
     }
 }
 
@@ -237,11 +292,28 @@ function upsertUser(email, firstName, lastName) {
   });
 }
 
+function getUser2(email) {
+  return new Promise((resolve, reject) => {
+    // Query the database
+    db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
+      if (err) {
+        reject('Error retrieving user: ' + err.message);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
+
+
 const getUser = (email) => {
+  logger.debug(`getUser(${email}) called`);
   let user = null; // Variable to hold the user data
 
   // Synchronous function to execute the query
   const sql = `SELECT * FROM users WHERE email = ?`;
+  logger.debug(`sql: ${sql}`);
   
   try {
     // Using db.prepare to create a statement
@@ -249,29 +321,28 @@ const getUser = (email) => {
     
     // Using stmt.get to retrieve the row
     user = stmt.get(email); // This is a synchronous call
+    logger.debug(`retrieved user: ${JSON.stringify(user)}`);
 
     // Finalize the statement to free resources
     stmt.finalize();
   } catch (error) {
     console.error("Error retrieving user:", error);
   }
-
+///  logger.debug(`retrieved user: ${JSON.stringify(user)}`);
   return user; // Return the user object or null if not found
 };
 
 function updateKey(email, apikey) {
-  console.log('updaetkey enter')
-  console.log(apikey);
+  logger.debug(`updateKey(${email},${apikey})`);
 
-  console.log('updaetkey val')
   const sql = `UPDATE users SET apikey = ? WHERE email = ?`;
 
   db.run(sql, [apikey, email], function(err) {
     if (err) {
       logger.error('Error upserting user:', err.message);
     } else {
-      logger.info('changes: ' + this.changes);
-      logger.info(`User upserted or updated with emailxxxxxx: ${email}`);
+      logger.debug('changes: ' + this.changes);
+      logger.info(`User upserted or updated with email: ${email}`);
     }
   });
 }

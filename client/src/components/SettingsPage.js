@@ -5,64 +5,67 @@ import { useAuth } from './AuthContext';
 
 
 const SettingsPage = () => {
-const [apiKey, setApiKey] = useState('');
-const { authToken, email } = useAuth();
+  const [apiKey, setApiKey] = useState('');
+  const { authToken, email } = useAuth();
 
-const handleInputChange = (event) => {
-  setApiKey(event.target.value);
-};
+  // maintain state of page
+  const handleInputChange = (event) => {
+    setApiKey(event.target.value);
+  };
 
-useEffect(() => {
-  const fetchUser = async () => {
-    if (!authToken) return; // If not authenticated, do not fetch
+  // get the API key from the database on load
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!authToken) return; // If not authenticated, do not fetch
 
+      try {
+        const response = await fetch(`http://localhost:8080/get-user?email=${encodeURIComponent(email)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const data = await response.json();
+        setApiKey(data.apikey); // Set the API key from user data
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
+  }, [authToken]); // Run this effect whenever the authToken changes
+
+  // submit the api key to the service
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
     try {
-      const response = await fetch(`http://localhost:8080/get-user?email=${encodeURIComponent(email)}`, {
-        method: 'GET',
+      console.log(email);
+      console.log(authToken);
+      const response = await fetch('http://localhost:8080/update-api-key', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${ authToken }`
         },
+        body: JSON.stringify({ apiKey, email }), // Send the API key as JSON
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user data');
+        throw new Error('Failed to update API key');
       }
 
       const data = await response.json();
-      setApiKey(data.apikey); // Set the API key from user data
+      console.log('API key updated successfully:', data);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error('Error updating API key:', error);
     }
   };
-
-  fetchUser();
-}, [authToken]); // Run this effect whenever the authToken changes
-
-
-const handleSubmit = async (event) => {
-  event.preventDefault(); // Prevent the default form submission behavior
-  try {
-    console.log(email);
-    console.log(authToken);
-    const response = await fetch('http://localhost:8080/update-api-key', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${ authToken }`
-      },
-      body: JSON.stringify({ apiKey, email }), // Send the API key as JSON
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update API key');
-    }
-
-    const data = await response.json();
-    console.log('API key updated successfully:', data);
-  } catch (error) {
-    console.error('Error updating API key:', error);
-  }
-};
 
 
   return (
