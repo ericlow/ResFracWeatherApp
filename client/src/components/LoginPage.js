@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { setToken, authToken } = useAuth();
+  const { setToken, authToken, setUserEmail } = useAuth();
 
   const handleSuccess = async (credentialResponse) => {
     // creds to go server
@@ -17,6 +17,7 @@ const LoginPage = () => {
     // Decode the token to get user info
     const user = jwtDecode(idToken); 
     const { name, email } = user;
+    setUserEmail(email);
 
     // Send the access token to the backend for validation
     const response = await fetch('http://localhost:8080/validate-user', {
