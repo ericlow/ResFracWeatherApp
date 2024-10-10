@@ -6,6 +6,8 @@ const DailyRotateFile = require('winston-daily-rotate-file');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { OAuth2Client } = require('google-auth-library');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
 const GOOGLE_CLIENT_ID = '768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com';
 
@@ -19,6 +21,37 @@ app.use(cors());
 app.use(express.json());
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
+// GET /get-user - Fetch user details from the database
+app.get('/get-user', (req, res) => {
+  console.log('1');
+  console.log(req.query)
+  const email = req.query.email;
+  console.log('2');
+
+  const query = 'SELECT * FROM users WHERE email = ?';
+  console.log('3');
+  db.get(query, [email], (err, row) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+    console.log('4');
+
+    if (!row) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    console.log('5');
+
+    // Return the user data as a JSON response
+    res.json({
+      first: row.first,
+      last: row.last,
+      email: row.email,
+      apikey: row.apikey,
+    });
+    console.log('6');
+  });
+});
 
 
 app.post('/validate-user', async (req, res) => {
@@ -120,6 +153,38 @@ async function getWeatherWithRetry(apikey, location, retries = 3, delay = 1000) 
 }
 
 
+// Middleware to parse JSON request bodies
+app.use(bodyParser.json());
+
+// Middleware to verify Google API token
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Extract the token from the header
+
+  if (!token) {
+    return res.status(403).send('Token is required');
+  }
+
+  jwt.verify(token, GOOGLE_CLIENT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).send('Invalid token');
+    }
+    req.user = user; // Attach user information to the request object
+    next(); // Proceed to the next middleware or route handler
+  });
+};
+
+// Apply the verifyToken middleware to the update-api-key route
+app.post('/update-api-key', async (req, res) => {
+  const { apiKey, email } = req.body;
+  try {
+    updateKey(email, apiKey);    
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    res.status(500).json({ error: 'Failed to update API key' });
+  }
+});
+
+
 // Define the path to your SQLite database file
 const dbPath = path.resolve(__dirname, 'db', 'users.db');
 
@@ -172,6 +237,44 @@ function upsertUser(email, firstName, lastName) {
   });
 }
 
+const getUser = (email) => {
+  let user = null; // Variable to hold the user data
+
+  // Synchronous function to execute the query
+  const sql = `SELECT * FROM users WHERE email = ?`;
+  
+  try {
+    // Using db.prepare to create a statement
+    const stmt = db.prepare(sql);
+    
+    // Using stmt.get to retrieve the row
+    user = stmt.get(email); // This is a synchronous call
+
+    // Finalize the statement to free resources
+    stmt.finalize();
+  } catch (error) {
+    console.error("Error retrieving user:", error);
+  }
+
+  return user; // Return the user object or null if not found
+};
+
+function updateKey(email, apikey) {
+  console.log('updaetkey enter')
+  console.log(apikey);
+
+  console.log('updaetkey val')
+  const sql = `UPDATE users SET apikey = ? WHERE email = ?`;
+
+  db.run(sql, [apikey, email], function(err) {
+    if (err) {
+      logger.error('Error upserting user:', err.message);
+    } else {
+      logger.info('changes: ' + this.changes);
+      logger.info(`User upserted or updated with emailxxxxxx: ${email}`);
+    }
+  });
+}
 
 // Close the database connection when the service shuts down
 const shutdown = () => {
