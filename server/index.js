@@ -53,6 +53,20 @@ app.get('/get-user', (req, res) => {
   });
 });
 
+// GET /get-user - Fetch user details from the database
+app.get('/get-weather', (req, res) => {
+  logger.info(req.query)
+  const city = req.query.city;
+  const email = req.query.email;
+  logger.debug(`city: ${city}\t email: ${email}`);
+  
+  const user = getUser(email);
+  logger.debug(`user: \n ${JSON.stringify(user)}`);
+
+  //getWeatherWithRetry(user.apiKey, city)
+
+});
+
 
 app.post('/validate-user', async (req, res) => {
   logger.debug('validate-user: enter');
@@ -90,7 +104,7 @@ app.post('/validate-user', async (req, res) => {
 
 // Configure Log Rotation
 const logger = winston.createLogger({
-    level: 'info',  // Minimum level to log (info and above)
+    level: 'debug',  // Minimum level to log (info and above)
     format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.printf(({ timestamp, level, message }) => {
@@ -238,10 +252,12 @@ function upsertUser(email, firstName, lastName) {
 }
 
 const getUser = (email) => {
+  logger.debug(`getUser(${email}) called`);
   let user = null; // Variable to hold the user data
 
   // Synchronous function to execute the query
   const sql = `SELECT * FROM users WHERE email = ?`;
+  logger.debug(`sql: ${sql}`);
   
   try {
     // Using db.prepare to create a statement
@@ -255,7 +271,7 @@ const getUser = (email) => {
   } catch (error) {
     console.error("Error retrieving user:", error);
   }
-
+  logger.debug(`retrieved user: ${JSON.stringify(user)}`);
   return user; // Return the user object or null if not found
 };
 
