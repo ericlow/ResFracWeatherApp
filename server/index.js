@@ -85,15 +85,16 @@ app.get('/', (req, res) => {
     res.send('Hello from our server!')
 
     // Call the function to get weather data
-    getWeatherWithRetry('Oakland');
+
+    getWeatherWithRetry('6f515ee0ef34e313d26e2b6a18fe6b41', 'Oakland');
 })
 
 // Function to fetch weather data with exponential backoff
-async function getWeatherWithRetry(location, retries = 3, delay = 1000) {
+async function getWeatherWithRetry(apikey, location, retries = 3, delay = 1000) {
     try {
         // Make the API request
         
-        const baseUrl = 'http://api.weatherstack.com/current?access_key=6f515ee0ef34e313d26e2b6a18fe6b41&query=${location}';
+        const baseUrl = 'http://api.weatherstack.com/current?access_key=${apikey}&query=${location}';
         const response = await axios.get(baseUrl);
         logger.info(response);
         // Check if the response has data
@@ -138,7 +139,7 @@ db.get('SELECT 1', [], (err, row) => {
   logger.info(`Database connection healthy`);
 });
 
-function upsertUser(email, firstName, lastName) {
+function insertUser(email, firstName, lastName) {
     const sql = `
       INSERT INTO users (email, first, last)
       VALUES (?, ?, ?)
@@ -146,12 +147,31 @@ function upsertUser(email, firstName, lastName) {
   
     db.run(sql, [email, firstName, lastName], function(err) {
       if (err) {
-        console.error('Error upserting user:', err.message);
+        logger.error('Error upserting user:', err.message);
       } else {
-        console.log(`User upserted or updated with email: ${email}`);
+        logger.info(`User upserted or updated with email: ${email}`);
       }
     });
   }
+
+
+function upsertUser(email, firstName, lastName) {
+  const sql = `
+  INSERT INTO users (email, first, last)
+  VALUES (?, ?, ?)
+  ON CONFLICT(email) DO UPDATE SET
+      first = excluded.first,
+      last = excluded.last;`;
+
+  db.run(sql, [email, firstName, lastName], function(err) {
+    if (err) {
+      logger.error('Error upserting user:', err.message);
+    } else {
+      logger.info(`User upserted or updated with email: ${email}`);
+    }
+  });
+}
+
 
 // Close the database connection when the service shuts down
 const shutdown = () => {
@@ -171,4 +191,6 @@ process.on('SIGINT', shutdown);  // Sent by Ctrl+C in the terminal
 
 logger.info('Server Started Successfully');
 
+insertUser('jane@gmail.com', 'Jane', "Doe");
+upsertUser('eric.low@gmail.com', 'changed', 'name');
 
