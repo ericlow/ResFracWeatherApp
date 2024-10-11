@@ -73,7 +73,7 @@ const SettingsPage = () => {
       <SettingsTitleBar/>
 
       <form onSubmit={handleSubmit} className="p-3">
-        <div  className-="mb-3  d-flex align-items-left">
+        <div  className="mb-3  d-flex align-items-left">
           <label  className="input-label" htmlFor="apiKey">API Key:</label><br/>
           <input  className="input-width me-2"  type="text" id="apiKey" value={apiKey} onChange={handleInputChange} placeholder="Enter your API key" />
           <button className="btn btn-primary" type="submit" >Save API Key</button>

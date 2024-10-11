@@ -49,7 +49,7 @@ const HomePage = () => {
         For example, you can enter "New York," "Los Angeles," or "London."
       </div>
       <form onSubmit={handleSubmit} className="p-3">
-        <div className-="mb-3  d-flex align-items-center">
+        <div className="">
           <input className="input-width me-2" type="text" id="city" value={city} onChange={handleInputChange} placeholder="What city do you want weather for?" />
           <button type="submit"  className="btn btn-primary">Get Weather</button>
         </div>

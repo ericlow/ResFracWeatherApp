@@ -3,17 +3,39 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from '../../components/HomePage';
+import { useAuth } from '../../components/AuthContext';
 
-test('render home page content', ()=> {
+
+// Mock the useAuth hook
+jest.mock('../../components/AuthContext', () => ({
+  useAuth: jest.fn(),
+}));
+
+
+describe('HomePage', () => {
+  beforeEach(() => {
+    // Ensure useAuth mock is reset before each test
+    useAuth.mockReset();
+  });
+
+  it('renders correctly when user is authenticated', () => {
+    // ARRANGE
+    useAuth.mockReturnValue({
+      authToken: 'valid_token',
+      email: 'user@example.com',
+    });
+
+    // ACT
     render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
-    // Check for the presence of heading
-    expect(screen.getByText(/Home Page Header/i)).toBeInTheDocument();
+    // ASSERT
+    expect(screen.getByText(/Enter City Name/)).toBeInTheDocument();
+  });
+
 });
-
 
 
