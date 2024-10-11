@@ -17,7 +17,7 @@ https://github.com/ericlow/ResFracWeatherApp
 # System 
 The following diagram shows how the app gets the client app gets the weather data from api.weatherstack.com
 
-![Weather App System Diagram](docs/ResFrac Weather App.png)
+![Weather App System Diagram](docs/ResFrac%20Weather%20App.png)
 
 # Local Development
 ## Pre-requisities
