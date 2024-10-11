@@ -17,45 +17,51 @@ https://github.com/ericlow/ResFracWeatherApp
 # System 
 The following diagram shows how the app gets the client app gets the weather data from api.weatherstack.com
 
+![Weather App System Diagram](docs/ResFrac Weather App.png)
+
 # Local Development
 ## Pre-requisities
-* Install SQLite
+### Install SQLite
+
 https://www.sqlite.org/download.html
 
-* Initialize database
+### Initialize database
 ```
 cd server/db
 ./create_db.sh
 ```
 
-* Install client libraries
+### Install client libraries
 ```
 cd client
 npm install
 ```
-* Install server libraries
+### Install server libraries
 ```
 cd server
 npm install
 ```
 
-* Google account
+# Google account
+  
 This project uses Google OAuth for user authentication
 
-* Weatherstack API
+# Weatherstack API
+  
 This app gets weather from the weatherstack api
 Sign up for a free plan at https://weatherstack.com/product
 make note of your API key
 
 ## Running the app
-* Start the server
+### Start the server
 ```
     cd server
     node index.js
 ```
-* Start the client web server
+### Start the client web server
 ```
     cd client
     npm start
 ```
-* Open the Login screen: http://localhost:3000
+### Open the Login screen
+http://localhost:3000
