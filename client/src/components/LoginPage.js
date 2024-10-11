@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuth } from './AuthContext';
+import LoginTitleBar from './LoginTitleBar';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -36,7 +37,8 @@ const LoginPage = () => {
 
   return (
     <div>
-      <h1>ResFrac Weather</h1>
+      <LoginTitleBar/>
+      
       <GoogleOAuthProvider clientId="768224754997-jhh8h44n5v8qojvj1g11mnbe4k3f4lbt.apps.googleusercontent.com">
         <div>
           <GoogleLogin onSuccess={handleSuccess} onFailure={error => { console.error(error) }} />
